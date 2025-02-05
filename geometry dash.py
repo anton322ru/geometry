@@ -5,7 +5,7 @@ pygame.init()
 
 w, h = 800, 600
 FPS = 30
-GRAVITY = 0.5
+GRAVITY = 0.51123
 
 def load_image(name, color_key=None):
     fullname = os.path.join('data', name)
