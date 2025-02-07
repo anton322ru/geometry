@@ -1,4 +1,5 @@
 import os
+import sys
 import pygame
 
 
@@ -19,12 +20,14 @@ def load_image(name, color_key=None):
         image = image.convert_alpha()
     return image
 
+
 def load_level(filename):
     filename = "data/" + filename
     with open(filename, 'r') as mapFile:
         level_map = [line.strip() for line in mapFile]
     max_width = max(map(len, level_map))
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
+
 
 def generate_level(level):
     new_player = None
@@ -34,7 +37,10 @@ def generate_level(level):
                 new_player = Player(x, y)
             elif level[y][x] == '^':
                 Treug(x, y)
+            elif level[y][x] == '=':
+                FloorBlock(x, y)
     return new_player
+
 
 # Класс игрока
 class Player(pygame.sprite.Sprite):
@@ -43,24 +49,31 @@ class Player(pygame.sprite.Sprite):
         self.image = load_image('player.png')
         self.rect = self.image.get_rect()
         self.rect.x = pos_x * tile_width
-        self.rect.y = pos_y * tile_height - self.rect.height
-        self.y_player = 0
-        self.on_ground = True
+        self.rect.y = pos_y * tile_height
+        self.gravita = 0
+        self.on_ground = False
 
     def update(self):
-        self.y_player += 0.7
-        self.rect.y += self.y_player
-        if self.rect.bottom >= h - 50:
-            self.rect.bottom = h - 50
+        self.gravita += 0.8
+        self.rect.y += self.gravita
+
+        if pygame.sprite.spritecollideany(self, floor_blocks):
             self.on_ground = True
-            self.y_player = 0
+            self.gravita = 0
+            self.rect.bottom = pygame.sprite.spritecollide(self, floor_blocks, False)[0].rect.top
+        else:
+            self.on_ground = False
+
+        if self.rect.left > w:
+            global running
+            running = False
 
     def jump(self):
         if self.on_ground:
-            self.y_player = -13
+            self.gravita = -15
             self.on_ground = False
 
-# Класс треугольника
+
 class Treug(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(treugs, all_sprites)
@@ -70,9 +83,24 @@ class Treug(pygame.sprite.Sprite):
         self.rect.y = pos_y * tile_height - self.rect.height
 
     def update(self):
-        self.rect.x -= 4 # я скорость x
+        self.rect.x -= 4  # я скорость x
         if self.rect.right < 0:
             self.kill()
+
+
+class FloorBlock(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y):
+        super().__init__(floor_blocks, all_sprites)
+        self.image = load_image('floor.png')
+        self.rect = self.image.get_rect()
+        self.rect.x = pos_x * tile_width
+        self.rect.y = pos_y * tile_height
+
+    def update(self):
+        self.rect.x -= 4
+        if self.rect.right < 0:
+            self.kill()
+
 
 pygame.init()
 size = w, h = (800, 400)
@@ -80,11 +108,12 @@ screen = pygame.display.set_mode(size)
 FPS = 60
 clock = pygame.time.Clock()
 
-tile_width = 30
+tile_width = 50
 tile_height = 50
 all_sprites = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 treugs = pygame.sprite.Group()
+floor_blocks = pygame.sprite.Group()
 
 level_map = load_level('map.map')
 player = generate_level(level_map)
@@ -101,7 +130,7 @@ while running:
     if pygame.sprite.spritecollideany(player, treugs):
         running = False
 
-    screen.fill((0, 0, 0))
+    screen.fill((255, 0, 0))
     all_sprites.draw(screen)
     pygame.display.flip()
     clock.tick(FPS)
