@@ -1,13 +1,7 @@
 import pygame
 import os
 import sys
-import random
 
-pygame.init()
-size = w, h = (800, 400)
-screen = pygame.display.set_mode(size)
-FPS = 60
-clock = pygame.time.Clock()
 
 def load_image(name, color_key=None):
     fullname = os.path.join('data', name)
@@ -26,53 +20,77 @@ def load_image(name, color_key=None):
         image = image.convert_alpha()
     return image
 
+def load_level(filename):
+    filename = "data/" + filename
+    with open(filename, 'r') as mapFile:
+        level_map = [line.strip() for line in mapFile]
+    max_width = max(map(len, level_map))
+    return list(map(lambda x: x.ljust(max_width, '.'), level_map))
+
+def generate_level(level):
+    new_player = None
+    for y in range(len(level)):
+        for x in range(len(level[y])):
+            if level[y][x] == '@':
+                new_player = Player(x, y)
+            elif level[y][x] == '^':
+                Treug(x, y)
+    return new_player
+
+# Класс игрока
 class Player(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, pos_x, pos_y):
+        super().__init__(player_group, all_sprites)
         self.image = load_image('player.png')
         self.rect = self.image.get_rect()
-        self.rect.center = (100, h - 50)
-        self.y = 0
+        self.rect.x = pos_x * tile_width
+        self.rect.y = pos_y * tile_height - self.rect.height
+        self.y_player = 0
         self.on_ground = True
 
     def update(self):
-        self.y += 1
-        self.rect.y += self.y
+        self.y_player += 0.7
+        self.rect.y += self.y_player
         if self.rect.bottom >= h - 50:
             self.rect.bottom = h - 50
             self.on_ground = True
-            self.y = 0
+            self.y_player = 0
 
     def jump(self):
         if self.on_ground:
-            self.y = -10
+            self.y_player = -13
             self.on_ground = False
 
+# Класс треугольника
 class Treug(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, pos_x, pos_y):
+        super().__init__(treugs, all_sprites)
         self.image = load_image('treug.png')
         self.rect = self.image.get_rect()
-        self.rect.center = (w + 100, h - 50)
-        self.speed = -10
+        self.rect.x = pos_x * tile_width
+        self.rect.y = pos_y * tile_height - self.rect.height
 
     def update(self):
-        self.rect.x += self.speed
+        self.rect.x -= 4 # я скорость x
         if self.rect.right < 0:
             self.kill()
 
-all_sprites = pygame.sprite.Group()
-treugs = pygame.sprite.Group()
-player = Player()
-all_sprites.add(player)
+pygame.init()
+size = w, h = (800, 400)
+screen = pygame.display.set_mode(size)
+FPS = 60
+clock = pygame.time.Clock()
 
-def spawn_treug():
-    treug = Treug()
-    all_sprites.add(treug)
-    treugs.add(treug)
+tile_width = 30
+tile_height = 50
+all_sprites = pygame.sprite.Group()
+player_group = pygame.sprite.Group()
+treugs = pygame.sprite.Group()
+
+level_map = load_level('map.map')
+player = generate_level(level_map)
 
 running = True
-spawn_delay = 0
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -80,14 +98,11 @@ while running:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 player.jump()
-    spawn_delay += 1
-    if spawn_delay >= 120:
-        spawn_treug()
-        spawn_delay = 0
     all_sprites.update()
     if pygame.sprite.spritecollideany(player, treugs):
         running = False
 
+    # Отрисовка
     screen.fill((0, 0, 0))
     all_sprites.draw(screen)
     pygame.display.flip()
