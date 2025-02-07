@@ -1,6 +1,5 @@
-import pygame
 import os
-import sys
+import pygame
 
 
 def load_image(name, color_key=None):
@@ -102,7 +101,6 @@ while running:
     if pygame.sprite.spritecollideany(player, treugs):
         running = False
 
-    # Отрисовка
     screen.fill((0, 0, 0))
     all_sprites.draw(screen)
     pygame.display.flip()
