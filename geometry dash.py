@@ -1,11 +1,13 @@
-import os
 import pygame
+import os
+import sys
+import random
 
 pygame.init()
-
-w, h = 800, 600
-FPS = 30
-GRAVITY = 0.5
+size = w, h = (800, 400)
+screen = pygame.display.set_mode(size)
+FPS = 60
+clock = pygame.time.Clock()
 
 def load_image(name, color_key=None):
     fullname = os.path.join('data', name)
@@ -24,82 +26,72 @@ def load_image(name, color_key=None):
         image = image.convert_alpha()
     return image
 
-class Player:
+class Player(pygame.sprite.Sprite):
     def __init__(self):
-        self.image = load_image('mar.png')  # Загрузка изображения
-        self.rect = self.image.get_rect(topleft=(100, h - 150))
-        self.velocity_y = 0
-        self.on_ground = False
+        super().__init__()
+        self.image = load_image('player.png')
+        self.rect = self.image.get_rect()
+        self.rect.center = (100, h - 50)
+        self.y = 0
+        self.on_ground = True
+
+    def update(self):
+        self.y += 1
+        self.rect.y += self.y
+        if self.rect.bottom >= h - 50:
+            self.rect.bottom = h - 50
+            self.on_ground = True
+            self.y = 0
 
     def jump(self):
         if self.on_ground:
-            self.velocity_y = -10
+            self.y = -10
             self.on_ground = False
 
-    def update(self):
-        self.velocity_y += GRAVITY
-        self.rect.y += self.velocity_y
-        if self.rect.y >= h - 100:
-            self.rect.y = h - 100
-            self.velocity_y = 0
-            self.on_ground = True
-
-    def draw(self, surface):
-        surface.blit(self.image, self.rect.topleft)  # Отображение изображения
-
-class Prepitstv:
-    def __init__(self, x):
-        self.rect = pygame.Rect(x, h - 90, 20, 20)
+class Treug(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = load_image('treug.png')
+        self.rect = self.image.get_rect()
+        self.rect.center = (w + 100, h - 50)
+        self.speed = -10
 
     def update(self):
-        self.rect.x -= 5
+        self.rect.x += self.speed
+        if self.rect.right < 0:
+            self.kill()
 
-def main():
-    pygame.display.set_caption("Geometry Dash Clone")
-    screen = pygame.display.set_mode((w, h))
-    clock = pygame.time.Clock()
+all_sprites = pygame.sprite.Group()
+treugs = pygame.sprite.Group()
+player = Player()
+all_sprites.add(player)
 
-    player = Player()
-    rects = []
-    score = 0
-    spawn_timer = 0
+def spawn_treug():
+    treug = Treug()
+    all_sprites.add(treug)
+    treugs.add(treug)
 
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
+running = True
+spawn_delay = 0
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                player.jump()
+    spawn_delay += 1
+    if spawn_delay >= 120:
+        spawn_treug()
+        spawn_delay = 0
+    all_sprites.update()
+    if pygame.sprite.spritecollideany(player, treugs):
+        running = False
 
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_SPACE]:
-            player.jump()
+    screen.fill((0, 0, 0))
+    all_sprites.draw(screen)
+    pygame.display.flip()
+    clock.tick(FPS)
 
-        player.update()
-        spawn_timer += 1
-        if spawn_timer > 80:
-            rects.append(Prepitstv(w))
-            spawn_timer = 0
-
-        for rect_1 in rects:
-            rect_1.update()
-            if rect_1.rect.x < 0:
-                rects.remove(rect_1)
-                score += 1
-
-            if player.rect.colliderect(rect_1.rect):
-                print("Game Over! Score:", score)
-                running = False
-
-        screen.fill((255, 255, 255))
-        player.draw(screen)  # Отображение игрока
-        for rect_1 in rects:
-            pygame.draw.rect(screen, (255, 0, 0), rect_1.rect)
-
-        pygame.display.flip()
-        clock.tick(FPS)
-    pygame.quit()
-    print()
-
-if __name__ == "__main__":
-    main()
-
+pygame.quit()
+sys.exit()
