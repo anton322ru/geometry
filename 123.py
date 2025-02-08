@@ -130,7 +130,7 @@ while running:
     pygame.display.flip()
     clock.tick(FPS)
 
-
+# Остановка музыки при завершении игры
 pygame.mixer.music.stop()
 pygame.quit()
 sys.exit()
