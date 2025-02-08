@@ -1,5 +1,6 @@
 import os
 import sys
+
 import pygame
 
 
@@ -54,7 +55,7 @@ class Player(pygame.sprite.Sprite):
         self.on_ground = False
 
     def update(self):
-        self.gravita += 0.8
+        self.gravita += 0.7
         self.rect.y += self.gravita
 
         if pygame.sprite.spritecollideany(self, floor_blocks):
@@ -80,10 +81,10 @@ class Treug(pygame.sprite.Sprite):
         self.image = load_image('treug.png')
         self.rect = self.image.get_rect()
         self.rect.x = pos_x * tile_width
-        self.rect.y = pos_y * tile_height - self.rect.height
+        self.rect.y = pos_y * tile_height
 
     def update(self):
-        self.rect.x -= 4  # я скорость x
+        self.rect.x -= 5  # я скорость x
         if self.rect.right < 0:
             self.kill()
 
@@ -97,7 +98,7 @@ class FloorBlock(pygame.sprite.Sprite):
         self.rect.y = pos_y * tile_height
 
     def update(self):
-        self.rect.x -= 4
+        self.rect.x -= 5
         if self.rect.right < 0:
             self.kill()
 
