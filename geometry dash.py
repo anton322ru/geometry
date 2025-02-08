@@ -8,7 +8,6 @@ def load_image(name, color_key=None):
         image = pygame.image.load(fullname).convert()
     except pygame.error as mes:
         print(f'Не могу загрузить файл: {name}')
-        print(mes)
         return
     if color_key is not None:
         image = image.convert()
@@ -71,7 +70,7 @@ class Player(pygame.sprite.Sprite):
 class Treug(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(treugs, all_sprites)
-        self.image = load_image('treug.png')
+        self.image = load_image('treug.png', color_key=-1)
         self.rect = self.image.get_rect()
         self.rect.x = pos_x * tile_width
         self.rect.y = pos_y * tile_height
@@ -107,8 +106,8 @@ player_group = pygame.sprite.Group()
 treugs = pygame.sprite.Group()
 floor_blocks = pygame.sprite.Group()
 
-pygame.mixer.music.load('data/BackOnTrack.mp3')
-pygame.mixer.music.play(-1)
+#pygame.mixer.music.load('data/BackOnTrack.mp3')
+# pygame.mixer.music.play(-1)
 
 level_map = load_level('map.map')
 player = generate_level(level_map)
@@ -122,7 +121,7 @@ while running:
             if event.key == pygame.K_SPACE:
                 player.jump()
     all_sprites.update()
-    if pygame.sprite.spritecollideany(player, treugs):
+    if pygame.sprite.spritecollideany(player, treugs, pygame.sprite.collide_mask):
         running = False
 
     screen.fill((255, 0, 0))
