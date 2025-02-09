@@ -134,16 +134,16 @@ class Finish(pygame.sprite.Sprite):
 def draw_main_menu():
     screen.fill((0, 0, 0))
     font = pygame.font.Font(None, 75)
-    text = font.render('Главное меню', True, (255, 255, 255))
+    text = font.render('Главное меню', True, (125, 255, 255))
     text_rect = text.get_rect(center=(w // 2, h // 2 - 50))
     screen.blit(text, text_rect)
 
     font = pygame.font.Font(None, 50)
-    start_text = font.render('Начать игру', True, (255, 255, 255))
+    start_text = font.render('Начать игру', True, (125, 255, 125))
     start_rect = start_text.get_rect(center=(w // 2, h // 2 + 50))
     screen.blit(start_text, start_rect)
 
-    total_coins_text = font.render(f'Всего монет: {total_coins}', True, (255, 255, 255))
+    total_coins_text = font.render(f'Всего монет: {total_coins}', True, (0, 255, 255))
     total_coins_rect = total_coins_text.get_rect(center=(w // 2, h // 2 + 150))
     screen.blit(total_coins_text, total_coins_rect)
 
