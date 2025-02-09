@@ -195,6 +195,7 @@ coin_count = 0
 total_coins = 0
 font = pygame.font.Font(None, 50)
 
+# Главный экран
 main_menu = True
 level_select = False
 running = True
@@ -219,70 +220,71 @@ while level_select:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if level1_rect.collidepoint(event.pos):
-                selected_level = 'map1.map'
                 speed = 5
+                selected_level = 'map1.map'
                 level_select = False
             elif level2_rect.collidepoint(event.pos):
-                selected_level = 'map2.map'
                 speed = 6
+                selected_level = 'map2.map'
                 level_select = False
             elif level3_rect.collidepoint(event.pos):
-                selected_level = 'map3.map'
                 speed = 8
+                selected_level = 'map3.map'
                 level_select = False
 
 if running and selected_level:
-    level_map = load_level(selected_level)
-    player = generate_level(level_map)
+    while running:
+        level_map = load_level(selected_level)
+        player = generate_level(level_map)
 
-    space_pressed = False
-    level_running = True
-    while level_running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+        space_pressed = False
+        level_running = True
+        while level_running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    level_running = False
+                    running = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        space_pressed = True
+                        player.jump()
+                elif event.type == pygame.KEYUP:
+                    if event.key == pygame.K_SPACE:
+                        space_pressed = False
+                        player.stop_jump()
+
+            if space_pressed and player.jumping:
+                player.jump()
+
+            if pygame.sprite.spritecollideany(player, treugs, pygame.sprite.collide_mask) or not player.alive():
                 level_running = False
-                running = False
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    space_pressed = True
-                    player.jump()
-            elif event.type == pygame.KEYUP:
-                if event.key == pygame.K_SPACE:
-                    space_pressed = False
-                    player.stop_jump()
+                coin_count = 0
 
-        if space_pressed and player.jumping:
-            player.jump()
+            stolcnov_coin = pygame.sprite.spritecollide(player, coins_group, True, pygame.sprite.collide_mask)
+            if stolcnov_coin:
+                coin_count += len(stolcnov_coin)
 
-        if pygame.sprite.spritecollideany(player, treugs, pygame.sprite.collide_mask) or not player.alive():
-            level_running = False
-            coin_count = 0
+            if pygame.sprite.spritecollideany(player, finish_group, pygame.sprite.collide_mask):
+                total_coins += coin_count
+                level_running = False
+                main_menu = True
+                level_select = False
+                coin_count = 0
 
-        stolcnov_coin = pygame.sprite.spritecollide(player, coins_group, True, pygame.sprite.collide_mask)
-        if stolcnov_coin:
-            coin_count += len(stolcnov_coin)
+            all_sprites.update()
 
-        if pygame.sprite.spritecollideany(player, finish_group, pygame.sprite.collide_mask):
-            total_coins += coin_count
-            level_running = False
-            main_menu = True
-            level_select = False
-            coin_count = 0
+            coin_text = font.render(f'Coins: {coin_count}', False, (255, 255, 255))
 
-        all_sprites.update()
+            screen.fill((255, 0, 0))
+            all_sprites.draw(screen)
 
-        coin_text = font.render(f'Coins: {coin_count}', False, (255, 255, 255))
+            screen.blit(coin_text, (10, 10))
 
-        screen.fill((255, 0, 0))
-        all_sprites.draw(screen)
+            pygame.display.flip()
+            clock.tick(FPS)
 
-        screen.blit(coin_text, (10, 10))
-
-        pygame.display.flip()
-        clock.tick(FPS)
-
-    for sprite in all_sprites:
-        sprite.kill()
+        for sprite in all_sprites:
+            sprite.kill()
 
 pygame.mixer.music.stop()
 pygame.quit()
