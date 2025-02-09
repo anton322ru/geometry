@@ -115,11 +115,86 @@ class Coin(pygame.sprite.Sprite):
         if self.rect.right < 0:
             self.kill()
 
+def draw_main_menu():
+    screen.fill((0, 0, 0))
+    font = pygame.font.Font(None, 75)
+    text = font.render('Главное меню', True, (255, 255, 255))
+    text_rect = text.get_rect(center=(w // 2, h // 2 - 50))
+    screen.blit(text, text_rect)
+
+    font = pygame.font.Font(None, 50)
+    start_text = font.render('Начать игру', True, (255, 255, 255))
+    start_rect = start_text.get_rect(center=(w // 2, h // 2 + 50))
+    screen.blit(start_text, start_rect)
+
+    pygame.display.flip()
+    return start_rect
+
+def draw_level_select():
+    screen.fill((0, 0, 0))
+    font = pygame.font.Font(None, 75)
+    text = font.render('Выбор уровня', True, (255, 255, 255))
+    text_rect = text.get_rect(center=(w // 2, h // 2 - 150))
+    screen.blit(text, text_rect)
+
+    font = pygame.font.Font(None, 50)
+    level1_text = font.render('Уровень 1', True, (255, 255, 255))
+    level1_rect = level1_text.get_rect(center=(w // 2, h // 2 - 50))
+    screen.blit(level1_text, level1_rect)
+
+    level2_text = font.render('Уровень 2', True, (255, 255, 255))
+    level2_rect = level2_text.get_rect(center=(w // 2, h // 2 + 50))
+    screen.blit(level2_text, level2_rect)
+
+    level3_text = font.render('Уровень 3', True, (255, 255, 255))
+    level3_rect = level3_text.get_rect(center=(w // 2, h // 2 + 150))
+    screen.blit(level3_text, level3_rect)
+
+    pygame.display.flip()
+    return level1_rect, level2_rect, level3_rect
+
+
 pygame.init()
 size = w, h = (900, 700)
 screen = pygame.display.set_mode(size)
 FPS = 60
 clock = pygame.time.Clock()
+
+main_menu = True
+level_select = False
+running = True
+selected_level = None
+
+
+while main_menu:
+    start_rect = draw_main_menu()
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            main_menu = False
+            running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if start_rect.collidepoint(event.pos):
+                main_menu = False
+                level_select = True
+
+while level_select:
+    level1_rect, level2_rect, level3_rect = draw_level_select()
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            level_select = False
+            running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if level1_rect.collidepoint(event.pos):
+                selected_level = 'map1.map'
+                level_select = False
+            elif level2_rect.collidepoint(event.pos):
+                selected_level = 'map2.map'
+                level_select = False
+            elif level3_rect.collidepoint(event.pos):
+                selected_level = 'map3.map'
+                level_select = False
+
+
 
 tile_width = 50
 tile_height = 50
@@ -134,46 +209,49 @@ font = pygame.font.Font(None, 50)
 # pygame.mixer.music.load('data/BackOnTrack.mp3')
 # pygame.mixer.music.play(-1)
 
-level_map = load_level('map.map')
-player = generate_level(level_map)
-
-space_pressed = False
+# Главный экран
 running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+
+if running and selected_level:
+    level_map = load_level(selected_level)
+    player = generate_level(level_map)
+
+    space_pressed = False
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    space_pressed = True
+                    player.jump()
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_SPACE:
+                    space_pressed = False
+                    player.stop_jump()
+
+        if space_pressed and player.jumping:
+            player.jump()
+
+        if pygame.sprite.spritecollideany(player, treugs, pygame.sprite.collide_mask):
             running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                space_pressed = True
-                player.jump()
-        elif event.type == pygame.KEYUP:
-            if event.key == pygame.K_SPACE:
-                space_pressed = False
-                player.stop_jump()
 
-    # Если пробел зажат, продолжаем прыжок
-    if space_pressed and player.jumping:
-        player.jump()
+        stolcnov_coin = pygame.sprite.spritecollide(player, coins_group, True, pygame.sprite.collide_mask)
+        if stolcnov_coin:
+            coin_count += len(stolcnov_coin)
 
-    if pygame.sprite.spritecollideany(player, treugs, pygame.sprite.collide_mask):
-        running = False
+        all_sprites.update()
 
-    stolcnov_coin = pygame.sprite.spritecollide(player, coins_group, True, pygame.sprite.collide_mask)
-    if stolcnov_coin:
-        coin_count += len(stolcnov_coin)
+        coin_text = font.render(f'Coins: {coin_count}', False, (255, 255, 255))
 
-    all_sprites.update()
+        screen.fill((255, 0, 0))
+        all_sprites.draw(screen)
 
-    coin_text = font.render(f'Coins: {coin_count}', False, (255, 255, 255))
+        screen.blit(coin_text, (10, 10))
 
-    screen.fill((255, 0, 0))
-    all_sprites.draw(screen)
+        pygame.display.flip()
+        clock.tick(FPS)
 
-    screen.blit(coin_text, (10, 10))  # рисует поверх экрана
-
-    pygame.display.flip()
-    clock.tick(FPS)
 
 pygame.mixer.music.stop()
 pygame.quit()
