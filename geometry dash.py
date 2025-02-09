@@ -1,8 +1,6 @@
 import os
 import sys
-
 import pygame
-
 
 def load_image(name, color_key=None):
     fullname = os.path.join('data', name)
@@ -20,14 +18,12 @@ def load_image(name, color_key=None):
         image = image.convert_alpha()
     return image
 
-
 def load_level(filename):
     filename = "data/" + filename
     with open(filename, 'r') as mapFile:
         level_map = [line.strip() for line in mapFile]
     max_width = max(map(len, level_map))
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
-
 
 def generate_level(level):
     new_player = None
@@ -43,7 +39,6 @@ def generate_level(level):
                 Coin(x, y)
     return new_player
 
-
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(player_group, all_sprites)
@@ -53,6 +48,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.y = pos_y * tile_height
         self.gravita = 0
         self.on_ground = False
+        self.jumping = False
 
     def update(self):
         self.gravita += 0.7
@@ -73,7 +69,10 @@ class Player(pygame.sprite.Sprite):
         if self.on_ground:
             self.gravita = -15
             self.on_ground = False
+            self.jumping = True
 
+    def stop_jump(self):
+        self.jumping = False
 
 class Treug(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
@@ -82,12 +81,12 @@ class Treug(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = pos_x * tile_width
         self.rect.y = pos_y * tile_height
+        self.mask = pygame.mask.from_surface(self.image)
 
     def update(self):
         self.rect.x -= 5  # я скорость x
         if self.rect.right < 0:
             self.kill()
-
 
 class FloorBlock(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
@@ -98,10 +97,9 @@ class FloorBlock(pygame.sprite.Sprite):
         self.rect.y = pos_y * tile_height
 
     def update(self):
-        self.rect.x -= 5# я скорость x
+        self.rect.x -= 5  # я скорость x
         if self.rect.right < 0:
             self.kill()
-
 
 class Coin(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
@@ -113,10 +111,9 @@ class Coin(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def update(self):
-        self.rect.x -= 5
+        self.rect.x -= 5  # я скорость x
         if self.rect.right < 0:
             self.kill()
-
 
 pygame.init()
 size = w, h = (900, 700)
@@ -140,6 +137,7 @@ font = pygame.font.Font(None, 50)
 level_map = load_level('map.map')
 player = generate_level(level_map)
 
+space_pressed = False
 running = True
 while running:
     for event in pygame.event.get():
@@ -147,8 +145,17 @@ while running:
             running = False
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
+                space_pressed = True
                 player.jump()
-    all_sprites.update()
+        elif event.type == pygame.KEYUP:
+            if event.key == pygame.K_SPACE:
+                space_pressed = False
+                player.stop_jump()
+
+    # Если пробел зажат, продолжаем прыжок
+    if space_pressed and player.jumping:
+        player.jump()
+
     if pygame.sprite.spritecollideany(player, treugs, pygame.sprite.collide_mask):
         running = False
 
@@ -156,12 +163,14 @@ while running:
     if stolcnov_coin:
         coin_count += len(stolcnov_coin)
 
+    all_sprites.update()
+
     coin_text = font.render(f'Coins: {coin_count}', False, (255, 255, 255))
 
     screen.fill((255, 0, 0))
     all_sprites.draw(screen)
 
-    screen.blit(coin_text, (10, 10)) # рисует поверх экрана
+    screen.blit(coin_text, (10, 10))  # рисует поверх экрана
 
     pygame.display.flip()
     clock.tick(FPS)
