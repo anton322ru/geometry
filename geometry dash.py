@@ -1,6 +1,8 @@
 import os
 import sys
+
 import pygame
+
 
 def load_image(name, color_key=None):
     fullname = os.path.join('data', name)
@@ -18,12 +20,14 @@ def load_image(name, color_key=None):
         image = image.convert_alpha()
     return image
 
+
 def load_level(filename):
     filename = "data/" + filename
     with open(filename, 'r') as mapFile:
         level_map = [line.strip() for line in mapFile]
     max_width = max(map(len, level_map))
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
+
 
 def generate_level(level):
     new_player = None
@@ -40,6 +44,7 @@ def generate_level(level):
             elif level[y][x] == 'f':
                 Finish(x, y)
     return new_player
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
@@ -75,6 +80,7 @@ class Player(pygame.sprite.Sprite):
     def stop_jump(self):
         self.jumping = False
 
+
 class Treug(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(treugs, all_sprites)
@@ -90,6 +96,7 @@ class Treug(pygame.sprite.Sprite):
         if self.rect.right < 0:
             self.kill()
 
+
 class FloorBlock(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(floor_blocks, all_sprites)
@@ -103,6 +110,7 @@ class FloorBlock(pygame.sprite.Sprite):
         self.rect.x -= speed  # я скорость x
         if self.rect.right < 0:
             self.kill()
+
 
 class Coin(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
@@ -119,6 +127,7 @@ class Coin(pygame.sprite.Sprite):
         if self.rect.right < 0:
             self.kill()
 
+
 class Finish(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(finish_group, all_sprites)
@@ -133,6 +142,7 @@ class Finish(pygame.sprite.Sprite):
         self.rect.x -= speed  # я скорость x
         if self.rect.right < 0:
             self.kill()
+
 
 def draw_main_menu():
     screen.fill((0, 0, 0))
@@ -152,6 +162,7 @@ def draw_main_menu():
 
     pygame.display.flip()
     return start_rect
+
 
 def draw_level_select():
     screen.fill((0, 0, 0))
@@ -175,6 +186,7 @@ def draw_level_select():
 
     pygame.display.flip()
     return level1_rect, level2_rect, level3_rect
+
 
 pygame.init()
 size = w, h = (900, 700)
@@ -201,6 +213,10 @@ level_select = False
 running = True
 selected_level = None
 
+# Загрузка музыки
+pygame.mixer.music.load('data/main_menu.mp3')
+pygame.mixer.music.play(-1)
+
 while main_menu:
     start_rect = draw_main_menu()
     for event in pygame.event.get():
@@ -211,7 +227,8 @@ while main_menu:
             if start_rect.collidepoint(event.pos):
                 main_menu = False
                 level_select = True
-
+                pygame.mixer.music.stop()
+music = None
 while level_select:
     level1_rect, level2_rect, level3_rect = draw_level_select()
     for event in pygame.event.get():
@@ -223,20 +240,23 @@ while level_select:
                 speed = 5
                 selected_level = 'map1.map'
                 level_select = False
+                music = 1
             elif level2_rect.collidepoint(event.pos):
                 speed = 6
                 selected_level = 'map2.map'
                 level_select = False
+                music = 2
             elif level3_rect.collidepoint(event.pos):
                 speed = 8
                 selected_level = 'map3.map'
                 level_select = False
-
+                music = 3
 if running and selected_level:
     while running:
+        pygame.mixer.music.load(f'data/level{music}.mp3')
+        pygame.mixer.music.play(-1)
         level_map = load_level(selected_level)
         player = generate_level(level_map)
-
         space_pressed = False
         level_running = True
         while level_running:
@@ -259,6 +279,9 @@ if running and selected_level:
             if pygame.sprite.spritecollideany(player, treugs, pygame.sprite.collide_mask) or not player.alive():
                 level_running = False
                 coin_count = 0
+                pygame.mixer.music.stop()
+                pygame.mixer.music.load(f'data/level{music}.mp3')
+                pygame.mixer.music.play(-1)
 
             stolcnov_coin = pygame.sprite.spritecollide(player, coins_group, True, pygame.sprite.collide_mask)
             if stolcnov_coin:
@@ -267,9 +290,10 @@ if running and selected_level:
             if pygame.sprite.spritecollideany(player, finish_group, pygame.sprite.collide_mask):
                 total_coins += coin_count
                 level_running = False
-                level_select = True  # Переходим к выбору уровня
-                main_menu = False  # Не возвращаемся в главное меню
+                level_select = True
+                main_menu = False
                 coin_count = 0
+                pygame.mixer.music.stop()
 
             all_sprites.update()
 
@@ -297,14 +321,17 @@ if running and selected_level:
                         speed = 5
                         selected_level = 'map1.map'
                         level_select = False
+                        music = 1
                     elif level2_rect.collidepoint(event.pos):
                         speed = 6
                         selected_level = 'map2.map'
                         level_select = False
+                        music = 2
                     elif level3_rect.collidepoint(event.pos):
                         speed = 8
                         selected_level = 'map3.map'
                         level_select = False
+                        music = 3
 
 pygame.mixer.music.stop()
 pygame.quit()
