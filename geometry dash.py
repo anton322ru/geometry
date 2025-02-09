@@ -37,7 +37,7 @@ def generate_level(level):
                 FloorBlock(x, y)
             elif level[y][x] == '$':
                 Coin(x, y)
-            elif level[y][x] == 'F':  # Финиш
+            elif level[y][x] == 'f':
                 Finish(x, y)
     return new_player
 
@@ -64,7 +64,7 @@ class Player(pygame.sprite.Sprite):
             self.on_ground = False
 
         if self.rect.left > w:
-            self.kill()  # Убиваем игрока, если он выходит за пределы экрана
+            self.kill()
 
     def jump(self):
         if self.on_ground:
@@ -85,7 +85,8 @@ class Treug(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def update(self):
-        self.rect.x -= 5  # я скорость x
+        global speed
+        self.rect.x -= speed  # я скорость x
         if self.rect.right < 0:
             self.kill()
 
@@ -98,7 +99,8 @@ class FloorBlock(pygame.sprite.Sprite):
         self.rect.y = pos_y * tile_height
 
     def update(self):
-        self.rect.x -= 5  # я скорость x
+        global speed
+        self.rect.x -= speed  # я скорость x
         if self.rect.right < 0:
             self.kill()
 
@@ -112,7 +114,8 @@ class Coin(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def update(self):
-        self.rect.x -= 5  # я скорость x
+        global speed
+        self.rect.x -= speed  # я скорость x
         if self.rect.right < 0:
             self.kill()
 
@@ -124,6 +127,12 @@ class Finish(pygame.sprite.Sprite):
         self.rect.x = pos_x * tile_width
         self.rect.y = pos_y * tile_height
         self.mask = pygame.mask.from_surface(self.image)
+
+    def update(self):
+        global speed
+        self.rect.x -= speed  # я скорость x
+        if self.rect.right < 0:
+            self.kill()
 
 def draw_main_menu():
     screen.fill((0, 0, 0))
@@ -186,7 +195,6 @@ coin_count = 0
 total_coins = 0
 font = pygame.font.Font(None, 50)
 
-# Главный экран
 main_menu = True
 level_select = False
 running = True
@@ -212,67 +220,69 @@ while level_select:
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if level1_rect.collidepoint(event.pos):
                 selected_level = 'map1.map'
+                speed = 5
                 level_select = False
             elif level2_rect.collidepoint(event.pos):
                 selected_level = 'map2.map'
+                speed = 6
                 level_select = False
             elif level3_rect.collidepoint(event.pos):
                 selected_level = 'map3.map'
+                speed = 8
                 level_select = False
 
 if running and selected_level:
-    while running:
-        level_map = load_level(selected_level)
-        player = generate_level(level_map)
+    level_map = load_level(selected_level)
+    player = generate_level(level_map)
 
-        space_pressed = False
-        level_running = True
-        while level_running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    level_running = False
-                    running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_SPACE:
-                        space_pressed = True
-                        player.jump()
-                elif event.type == pygame.KEYUP:
-                    if event.key == pygame.K_SPACE:
-                        space_pressed = False
-                        player.stop_jump()
-
-            if space_pressed and player.jumping:
-                player.jump()
-
-            if pygame.sprite.spritecollideany(player, treugs, pygame.sprite.collide_mask) or not player.alive():
+    space_pressed = False
+    level_running = True
+    while level_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
                 level_running = False
-                coin_count = 0
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    space_pressed = True
+                    player.jump()
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_SPACE:
+                    space_pressed = False
+                    player.stop_jump()
 
-            stolcnov_coin = pygame.sprite.spritecollide(player, coins_group, True, pygame.sprite.collide_mask)
-            if stolcnov_coin:
-                coin_count += len(stolcnov_coin)
+        if space_pressed and player.jumping:
+            player.jump()
 
-            if pygame.sprite.spritecollideany(player, finish_group, pygame.sprite.collide_mask):
-                total_coins += coin_count
-                level_running = False
-                main_menu = True
-                level_select = False
-                coin_count = 0
+        if pygame.sprite.spritecollideany(player, treugs, pygame.sprite.collide_mask) or not player.alive():
+            level_running = False
+            coin_count = 0
 
-            all_sprites.update()
+        stolcnov_coin = pygame.sprite.spritecollide(player, coins_group, True, pygame.sprite.collide_mask)
+        if stolcnov_coin:
+            coin_count += len(stolcnov_coin)
 
-            coin_text = font.render(f'Coins: {coin_count}', False, (255, 255, 255))
+        if pygame.sprite.spritecollideany(player, finish_group, pygame.sprite.collide_mask):
+            total_coins += coin_count
+            level_running = False
+            main_menu = True
+            level_select = False
+            coin_count = 0
 
-            screen.fill((255, 0, 0))
-            all_sprites.draw(screen)
+        all_sprites.update()
 
-            screen.blit(coin_text, (10, 10))
+        coin_text = font.render(f'Coins: {coin_count}', False, (255, 255, 255))
 
-            pygame.display.flip()
-            clock.tick(FPS)
+        screen.fill((255, 0, 0))
+        all_sprites.draw(screen)
 
-        for sprite in all_sprites:
-            sprite.kill()
+        screen.blit(coin_text, (10, 10))
+
+        pygame.display.flip()
+        clock.tick(FPS)
+
+    for sprite in all_sprites:
+        sprite.kill()
 
 pygame.mixer.music.stop()
 pygame.quit()
