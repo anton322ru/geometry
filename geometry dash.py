@@ -35,6 +35,8 @@ def generate_level(level):
                 Treug(x, y)
             elif level[y][x] == '=':
                 FloorBlock(x, y)
+            elif level[y][x] == '$':
+                Coin(x, y)
     return new_player
 
 class Player(pygame.sprite.Sprite):
@@ -93,6 +95,21 @@ class FloorBlock(pygame.sprite.Sprite):
         if self.rect.right < 0:
             self.kill()
 
+class Coin(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y):
+        super().__init__(coins_group, all_sprites)
+        self.image = load_image('coin.png', color_key=-1)
+        self.rect = self.image.get_rect()
+        self.rect.x = pos_x * tile_width
+        self.rect.y = pos_y * tile_height  - 70
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def update(self):
+        self.rect.x -= 5
+        if self.rect.right < 0:
+            self.kill()
+
+
 pygame.init()
 size = w, h = (800, 400)
 screen = pygame.display.set_mode(size)
@@ -105,6 +122,8 @@ all_sprites = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 treugs = pygame.sprite.Group()
 floor_blocks = pygame.sprite.Group()
+coins_group = pygame.sprite.Group()
+
 
 #pygame.mixer.music.load('data/BackOnTrack.mp3')
 # pygame.mixer.music.play(-1)
