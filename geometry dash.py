@@ -37,6 +37,8 @@ def generate_level(level):
                 FloorBlock(x, y)
             elif level[y][x] == '$':
                 Coin(x, y)
+            elif level[y][x] == 'f':
+                Finish(x, y)
     return new_player
 
 class Player(pygame.sprite.Sprite):
@@ -84,8 +86,7 @@ class Treug(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def update(self):
-        global speed
-        self.rect.x -= speed  # я скорость x
+        self.rect.x -= 5  # я скорость x
         if self.rect.right < 0:
             self.kill()
 
@@ -98,8 +99,7 @@ class FloorBlock(pygame.sprite.Sprite):
         self.rect.y = pos_y * tile_height
 
     def update(self):
-        global speed
-        self.rect.x -= speed  # я скорость x
+        self.rect.x -= 5  # я скорость x
         if self.rect.right < 0:
             self.kill()
 
@@ -113,8 +113,21 @@ class Coin(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def update(self):
-        global speed
-        self.rect.x -= speed  # я скорость x
+        self.rect.x -= 5  # я скорость x
+        if self.rect.right < 0:
+            self.kill()
+
+class Finish(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y):
+        super().__init__(finish_group, all_sprites)
+        self.image = load_image('finish.png')
+        self.rect = self.image.get_rect()
+        self.rect.x = pos_x * tile_width
+        self.rect.y = pos_y * tile_height
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def update(self):
+        self.rect.x -= 5  # я скорость x
         if self.rect.right < 0:
             self.kill()
 
@@ -129,6 +142,10 @@ def draw_main_menu():
     start_text = font.render('Начать игру', True, (255, 255, 255))
     start_rect = start_text.get_rect(center=(w // 2, h // 2 + 50))
     screen.blit(start_text, start_rect)
+
+    total_coins_text = font.render(f'Всего монет: {total_coins}', True, (255, 255, 255))
+    total_coins_rect = total_coins_text.get_rect(center=(w // 2, h // 2 + 150))
+    screen.blit(total_coins_text, total_coins_rect)
 
     pygame.display.flip()
     return start_rect
@@ -156,18 +173,30 @@ def draw_level_select():
     pygame.display.flip()
     return level1_rect, level2_rect, level3_rect
 
-
 pygame.init()
 size = w, h = (900, 700)
 screen = pygame.display.set_mode(size)
 FPS = 60
 clock = pygame.time.Clock()
 
+tile_width = 50
+tile_height = 50
+all_sprites = pygame.sprite.Group()
+player_group = pygame.sprite.Group()
+treugs = pygame.sprite.Group()
+floor_blocks = pygame.sprite.Group()
+coins_group = pygame.sprite.Group()
+finish_group = pygame.sprite.Group()
+
+coin_count = 0
+total_coins = 0
+font = pygame.font.Font(None, 50)
+
+# Главный экран
 main_menu = True
 level_select = False
 running = True
 selected_level = None
-
 
 while main_menu:
     start_rect = draw_main_menu()
@@ -189,34 +218,13 @@ while level_select:
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if level1_rect.collidepoint(event.pos):
                 selected_level = 'map1.map'
-                speed = 5
                 level_select = False
             elif level2_rect.collidepoint(event.pos):
                 selected_level = 'map2.map'
-                speed = 6
                 level_select = False
             elif level3_rect.collidepoint(event.pos):
                 selected_level = 'map3.map'
-                speed = 8
                 level_select = False
-
-
-
-tile_width = 50
-tile_height = 50
-all_sprites = pygame.sprite.Group()
-player_group = pygame.sprite.Group()
-treugs = pygame.sprite.Group()
-floor_blocks = pygame.sprite.Group()
-coins_group = pygame.sprite.Group()
-
-coin_count = 0
-font = pygame.font.Font(None, 50)
-pygame.mixer.music.load('data/BackOnTrack.mp3')
-pygame.mixer.music.play(-1)
-
-# Главный экран
-running = True
 
 if running and selected_level:
     level_map = load_level(selected_level)
@@ -246,6 +254,13 @@ if running and selected_level:
         if stolcnov_coin:
             coin_count += len(stolcnov_coin)
 
+        if pygame.sprite.spritecollideany(player, finish_group, pygame.sprite.collide_mask):
+            total_coins += coin_count
+            running = False
+            main_menu = True
+            level_select = False
+            coin_count = 0
+
         all_sprites.update()
 
         coin_text = font.render(f'Coins: {coin_count}', False, (255, 255, 255))
@@ -257,7 +272,6 @@ if running and selected_level:
 
         pygame.display.flip()
         clock.tick(FPS)
-
 
 pygame.mixer.music.stop()
 pygame.quit()
