@@ -84,7 +84,8 @@ class Treug(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def update(self):
-        self.rect.x -= 5  # я скорость x
+        global speed
+        self.rect.x -= speed  # я скорость x
         if self.rect.right < 0:
             self.kill()
 
@@ -97,7 +98,8 @@ class FloorBlock(pygame.sprite.Sprite):
         self.rect.y = pos_y * tile_height
 
     def update(self):
-        self.rect.x -= 5  # я скорость x
+        global speed
+        self.rect.x -= speed  # я скорость x
         if self.rect.right < 0:
             self.kill()
 
@@ -111,7 +113,8 @@ class Coin(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def update(self):
-        self.rect.x -= 5  # я скорость x
+        global speed
+        self.rect.x -= speed  # я скорость x
         if self.rect.right < 0:
             self.kill()
 
@@ -186,12 +189,15 @@ while level_select:
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if level1_rect.collidepoint(event.pos):
                 selected_level = 'map1.map'
+                speed = 5
                 level_select = False
             elif level2_rect.collidepoint(event.pos):
                 selected_level = 'map2.map'
+                speed = 6
                 level_select = False
             elif level3_rect.collidepoint(event.pos):
                 selected_level = 'map3.map'
+                speed = 8
                 level_select = False
 
 
@@ -206,8 +212,8 @@ coins_group = pygame.sprite.Group()
 
 coin_count = 0
 font = pygame.font.Font(None, 50)
-# pygame.mixer.music.load('data/BackOnTrack.mp3')
-# pygame.mixer.music.play(-1)
+pygame.mixer.music.load('data/BackOnTrack.mp3')
+pygame.mixer.music.play(-1)
 
 # Главный экран
 running = True
