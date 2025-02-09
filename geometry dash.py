@@ -267,8 +267,8 @@ if running and selected_level:
             if pygame.sprite.spritecollideany(player, finish_group, pygame.sprite.collide_mask):
                 total_coins += coin_count
                 level_running = False
-                main_menu = True
-                level_select = False
+                level_select = True  # Переходим к выбору уровня
+                main_menu = False  # Не возвращаемся в главное меню
                 coin_count = 0
 
             all_sprites.update()
@@ -285,6 +285,26 @@ if running and selected_level:
 
         for sprite in all_sprites:
             sprite.kill()
+
+        while level_select:
+            level1_rect, level2_rect, level3_rect = draw_level_select()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    level_select = False
+                    running = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if level1_rect.collidepoint(event.pos):
+                        speed = 5
+                        selected_level = 'map1.map'
+                        level_select = False
+                    elif level2_rect.collidepoint(event.pos):
+                        speed = 6
+                        selected_level = 'map2.map'
+                        level_select = False
+                    elif level3_rect.collidepoint(event.pos):
+                        speed = 8
+                        selected_level = 'map3.map'
+                        level_select = False
 
 pygame.mixer.music.stop()
 pygame.quit()
