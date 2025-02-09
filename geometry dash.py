@@ -1,6 +1,8 @@
 import os
 import sys
+
 import pygame
+
 
 def load_image(name, color_key=None):
     fullname = os.path.join('data', name)
@@ -18,12 +20,14 @@ def load_image(name, color_key=None):
         image = image.convert_alpha()
     return image
 
+
 def load_level(filename):
     filename = "data/" + filename
     with open(filename, 'r') as mapFile:
         level_map = [line.strip() for line in mapFile]
     max_width = max(map(len, level_map))
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
+
 
 def generate_level(level):
     new_player = None
@@ -38,6 +42,7 @@ def generate_level(level):
             elif level[y][x] == '$':
                 Coin(x, y)
     return new_player
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
@@ -69,6 +74,7 @@ class Player(pygame.sprite.Sprite):
             self.gravita = -15
             self.on_ground = False
 
+
 class Treug(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(treugs, all_sprites)
@@ -82,6 +88,7 @@ class Treug(pygame.sprite.Sprite):
         if self.rect.right < 0:
             self.kill()
 
+
 class FloorBlock(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(floor_blocks, all_sprites)
@@ -91,9 +98,10 @@ class FloorBlock(pygame.sprite.Sprite):
         self.rect.y = pos_y * tile_height
 
     def update(self):
-        self.rect.x -= 5
+        self.rect.x -= 5# я скорость x
         if self.rect.right < 0:
             self.kill()
+
 
 class Coin(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
@@ -101,7 +109,7 @@ class Coin(pygame.sprite.Sprite):
         self.image = load_image('coin.png', color_key=-1)
         self.rect = self.image.get_rect()
         self.rect.x = pos_x * tile_width
-        self.rect.y = pos_y * tile_height  - 70
+        self.rect.y = pos_y * tile_height - 70
         self.mask = pygame.mask.from_surface(self.image)
 
     def update(self):
@@ -111,7 +119,7 @@ class Coin(pygame.sprite.Sprite):
 
 
 pygame.init()
-size = w, h = (800, 400)
+size = w, h = (900, 700)
 screen = pygame.display.set_mode(size)
 FPS = 60
 clock = pygame.time.Clock()
@@ -124,8 +132,9 @@ treugs = pygame.sprite.Group()
 floor_blocks = pygame.sprite.Group()
 coins_group = pygame.sprite.Group()
 
-
-#pygame.mixer.music.load('data/BackOnTrack.mp3')
+coin_count = 0
+font = pygame.font.Font(None, 50)
+# pygame.mixer.music.load('data/BackOnTrack.mp3')
 # pygame.mixer.music.play(-1)
 
 level_map = load_level('map.map')
@@ -143,11 +152,19 @@ while running:
     if pygame.sprite.spritecollideany(player, treugs, pygame.sprite.collide_mask):
         running = False
 
+    stolcnov_coin = pygame.sprite.spritecollide(player, coins_group, True, pygame.sprite.collide_mask)
+    if stolcnov_coin:
+        coin_count += len(stolcnov_coin)
+
+    coin_text = font.render(f'Coins: {coin_count}', False, (255, 255, 255))
+
     screen.fill((255, 0, 0))
     all_sprites.draw(screen)
+
+    screen.blit(coin_text, (10, 10)) # рисует поверх экрана
+
     pygame.display.flip()
     clock.tick(FPS)
-
 
 pygame.mixer.music.stop()
 pygame.quit()
