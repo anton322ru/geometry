@@ -199,7 +199,6 @@ def run(coin):
 
         pygame.display.flip()
 
-        pygame.display.flip()
         return level1_rect, level2_rect, level3_rect
 
     pygame.init()
@@ -222,13 +221,11 @@ def run(coin):
     total_coins = coin
     font = pygame.font.Font(None, 50)
 
-    # Главный экран
     main_menu = True
     level_select = False
     running = True
     selected_level = None
 
-    # Загрузка музыки
     pygame.mixer.music.load('data/main_menu.mp3')
     pygame.mixer.music.play(-1)
 
