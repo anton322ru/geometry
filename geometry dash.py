@@ -47,6 +47,8 @@ def run(coin):
                     Coin(x, y)
                 elif level[y][x] == 'f':
                     Finish(x, y)
+                elif level[y][x] == 'x':
+                    Treug_mal(x, y)
         return new_player
 
     class Player(pygame.sprite.Sprite):
@@ -87,6 +89,20 @@ def run(coin):
         def __init__(self, pos_x, pos_y):
             super().__init__(treugs, all_sprites)
             self.image = load_image('treug.png', color_key=-1)
+            self.rect = self.image.get_rect()
+            self.rect.x = pos_x * tile_width
+            self.rect.y = pos_y * tile_height
+            self.mask = pygame.mask.from_surface(self.image)
+
+        def update(self):
+            self.rect.x -= speed  # я скорость x
+            if self.rect.right < 0:
+                self.kill()
+
+    class Treug_mal(pygame.sprite.Sprite):
+        def __init__(self, pos_x, pos_y):
+            super().__init__(treugs, all_sprites)
+            self.image = load_image('mal_treug.png', color_key=-1)
             self.rect = self.image.get_rect()
             self.rect.x = pos_x * tile_width
             self.rect.y = pos_y * tile_height
@@ -169,7 +185,7 @@ def run(coin):
         level1_rect = level1_text.get_rect(center=(w // 2, h // 2 - 50))
         screen.blit(level1_text, level1_rect)
 
-        level2_text = font.render('Уровень 2', True, (255, 255, 255))
+        level2_text = font.render('Уровень 2(в разработке)', True, (255, 255, 255))
         level2_rect = level2_text.get_rect(center=(w // 2, h // 2 + 50))
         screen.blit(level2_text, level2_rect)
 
@@ -178,7 +194,7 @@ def run(coin):
         screen.blit(level3_text, level3_rect)
 
         total_coins_text = font.render(f'Всего монет: {total_coins}', True, (255, 255, 255))
-        total_coins_rect = total_coins_text.get_rect(center=(w // 2, h // 2 + 200))
+        total_coins_rect = total_coins_text.get_rect(center=(w // 2, h // 2 + 240))
         screen.blit(total_coins_text, total_coins_rect)
 
         pygame.display.flip()
@@ -228,6 +244,8 @@ def run(coin):
                     level_select = True
                     pygame.mixer.music.stop()
     music = None
+    pygame.mixer.music.load('data/menu.mp3')
+    pygame.mixer.music.play(-1)
     while level_select:
         level1_rect, level2_rect, level3_rect = draw_level_select()
         for event in pygame.event.get():
@@ -296,7 +314,7 @@ def run(coin):
 
                 all_sprites.update()
 
-                coin_text = font.render(f'Coins: {coin_count}', False, (255, 255, 255))
+                coin_text = font.render(f'Долларов: {coin_count}', False, (255, 255, 255))
 
                 screen.fill((255, 0, 0))
                 all_sprites.draw(screen)
@@ -317,12 +335,12 @@ def run(coin):
                         running = False
                     elif event.type == pygame.MOUSEBUTTONDOWN:
                         if level1_rect.collidepoint(event.pos):
-                            speed = 5
+                            speed = 6
                             selected_level = 'map1.map'
                             level_select = False
                             music = 1
                         elif level2_rect.collidepoint(event.pos):
-                            speed = 6
+                            speed = 7
                             selected_level = 'map2.map'
                             level_select = False
                             music = 2
