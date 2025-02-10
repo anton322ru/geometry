@@ -305,7 +305,6 @@ def run(coin):
                     total_coins += coin_count
                     level_running = False
                     level_select = True
-                    main_menu = False
                     coin_count = 0
                     pygame.mixer.music.stop()
 
