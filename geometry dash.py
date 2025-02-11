@@ -208,7 +208,7 @@ def run(coin):
 
     pygame.init()
 
-    size = w, h = (900, 700)
+    size = w, h = (800, 700)
     screen = pygame.display.set_mode(size)
     FPS = 60
     clock = pygame.time.Clock()
