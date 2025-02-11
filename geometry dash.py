@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QLi
 
 
 def run(coin):
+    # загрузка картинок
     def load_image(name, color_key=None):
         fullname = os.path.join('data', name)
         try:
@@ -26,6 +27,7 @@ def run(coin):
             image = image.convert_alpha()
         return image
 
+    # загрузка карты
     def load_level(filename):
         filename = "data/" + filename
         with open(filename, 'r') as mapFile:
@@ -70,6 +72,7 @@ def run(coin):
                 self.on_ground = True
                 self.gravita = 0
                 self.rect.bottom = pygame.sprite.spritecollide(self, floor_blocks, False)[0].rect.top
+
             else:
                 self.on_ground = False
 
@@ -85,6 +88,7 @@ def run(coin):
         def stop_jump(self):
             self.jumping = False
 
+
     class Treug(pygame.sprite.Sprite):
         def __init__(self, pos_x, pos_y):
             super().__init__(treugs, all_sprites)
@@ -98,6 +102,7 @@ def run(coin):
             self.rect.x -= speed  # я скорость x
             if self.rect.right < 0:
                 self.kill()
+
 
     class Treug_mal(pygame.sprite.Sprite):
         def __init__(self, pos_x, pos_y):
@@ -213,6 +218,7 @@ def run(coin):
     all_sprites = pygame.sprite.Group()
     player_group = pygame.sprite.Group()
     treugs = pygame.sprite.Group()
+
     floor_blocks = pygame.sprite.Group()
     coins_group = pygame.sprite.Group()
     finish_group = pygame.sprite.Group()
@@ -240,9 +246,12 @@ def run(coin):
                     main_menu = False
                     level_select = True
                     pygame.mixer.music.stop()
+
     music = None
     pygame.mixer.music.load('data/menu.mp3')
     pygame.mixer.music.play(-1)
+
+
     while level_select:
         level1_rect, level2_rect, level3_rect = draw_level_select()
         for event in pygame.event.get():
@@ -265,6 +274,8 @@ def run(coin):
                     selected_level = 'map3.map'
                     level_select = False
                     music = 3
+
+
     if running and selected_level:
         while running:
             pygame.mixer.music.load(f'data/level{music}.mp3')
@@ -290,6 +301,7 @@ def run(coin):
                 if space_pressed and player.jumping:
                     player.jump()
 
+                # Проверка столкновения с треугольником
                 if pygame.sprite.spritecollideany(player, treugs, pygame.sprite.collide_mask) or not player.alive():
                     level_running = False
                     coin_count = 0
@@ -297,10 +309,13 @@ def run(coin):
                     pygame.mixer.music.load(f'data/level{music}.mp3')
                     pygame.mixer.music.play(-1)
 
+                # Проверка столкновения с монетой
                 stolcnov_coin = pygame.sprite.spritecollide(player, coins_group, True, pygame.sprite.collide_mask)
+
                 if stolcnov_coin:
                     coin_count += len(stolcnov_coin)
 
+                # Проверка столкновения с финишом
                 if pygame.sprite.spritecollideany(player, finish_group, pygame.sprite.collide_mask):
                     total_coins += coin_count
                     level_running = False
@@ -326,10 +341,12 @@ def run(coin):
             while level_select:
                 level1_rect, level2_rect, level3_rect = draw_level_select()
                 for event in pygame.event.get():
+
                     if event.type == pygame.QUIT:
                         level_select = False
                         running = False
                     elif event.type == pygame.MOUSEBUTTONDOWN:
+
                         if level1_rect.collidepoint(event.pos):
                             speed = 6
                             selected_level = 'map1.map'
@@ -345,19 +362,24 @@ def run(coin):
                             selected_level = 'map3.map'
                             level_select = False
                             music = 3
+
+
     pygame.mixer.music.stop()
     pygame.quit()
     return total_coins
+
 
 class UserAuth(QWidget):
     def __init__(self):
         super().__init__()
         create_table()
+
         self.total_coins = 0
         self.login = None
         self.initUI()
 
     def initUI(self):
+
         self.setWindowTitle('Авторизация')
 
         # Поля для ввода логина и пароля
@@ -390,13 +412,16 @@ class UserAuth(QWidget):
         layout.addWidget(self.password_input)
         layout.addWidget(self.login_button)
         layout.addWidget(self.register_button)
-        layout.addWidget(self.image_view)  # Добавляю QGraphicsView с изображением
+        layout.addWidget(self.image_view)
+        # Добавляю QGraphicsView с изображением
         self.setLayout(layout)
 
     def hash_password(self, password):
+
         return sha256(password.encode('utf-8')).hexdigest()
 
     def login_user(self):
+
         self.login = self.login_input.text().strip()
         password = self.hash_password(self.password_input.text().strip())
 
@@ -405,6 +430,8 @@ class UserAuth(QWidget):
         cursor.execute('SELECT total_coins FROM users WHERE login = ? AND password = ?', (self.login, password))
         user = cursor.fetchone()
         conn.close()
+
+
         if user:
             self.total_coins = user[0]
             QMessageBox.information(self, 'Успех', f'Вы успешно вошли! У вас {self.total_coins} монет.')
@@ -422,7 +449,9 @@ class UserAuth(QWidget):
 
         conn = sqlite3.connect('app_database.db')
         cursor = conn.cursor()
+
         cursor.execute('SELECT * FROM users WHERE login = ?', (login,))
+
         if cursor.fetchone():
             QMessageBox.warning(self, 'Ошибка', 'Этот логин уже существует.')
         else:
@@ -437,6 +466,7 @@ class UserAuth(QWidget):
         self.update_coins()
 
     def run_game(self):
+
         self.total_coins = run(self.total_coins)
         self.update_coins()
 
@@ -449,6 +479,7 @@ class UserAuth(QWidget):
 
 
 def create_table():
+
     conn = sqlite3.connect('app_database.db')
     cursor = conn.cursor()
     create_table_query = '''
@@ -457,7 +488,7 @@ def create_table():
         login TEXT NOT NULL UNIQUE,
         password TEXT NOT NULL,
         total_coins INTEGER DEFAULT 0
-    );
+    )
     '''
 
     cursor.execute(create_table_query)
