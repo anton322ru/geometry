@@ -88,7 +88,6 @@ def run(coin):
         def stop_jump(self):
             self.jumping = False
 
-
     class Treug(pygame.sprite.Sprite):
         def __init__(self, pos_x, pos_y):
             super().__init__(treugs, all_sprites)
@@ -102,7 +101,6 @@ def run(coin):
             self.rect.x -= speed  # я скорость x
             if self.rect.right < 0:
                 self.kill()
-
 
     class Treug_mal(pygame.sprite.Sprite):
         def __init__(self, pos_x, pos_y):
@@ -206,6 +204,26 @@ def run(coin):
 
         return level1_rect, level2_rect, level3_rect
 
+    def draw_final_screen(coins_collected):
+        screen.fill((0, 0, 0))
+        font = pygame.font.Font(None, 75)
+        text = font.render('Уровень пройден!', True, (255, 255, 255))
+        text_rect = text.get_rect(center=(w // 2, h // 2 - 100))
+        screen.blit(text, text_rect)
+
+        font = pygame.font.Font(None, 50)
+        coins_text = font.render(f'Собрано монет: {coins_collected}', True, (255, 255, 255))
+        coins_rect = coins_text.get_rect(center=(w // 2, h // 2))
+        screen.blit(coins_text, coins_rect)
+
+        font = pygame.font.Font(None, 50)
+        menu_text = font.render('Вернуться в меню', True, (255, 255, 255))
+        menu_rect = menu_text.get_rect(center=(w // 2, h // 2 + 100))
+        screen.blit(menu_text, menu_rect)
+
+        pygame.display.flip()
+        return menu_rect
+
     pygame.init()
 
     size = w, h = (800, 700)
@@ -251,7 +269,6 @@ def run(coin):
     pygame.mixer.music.load('data/menu.mp3')
     pygame.mixer.music.play(-1)
 
-
     while level_select:
         level1_rect, level2_rect, level3_rect = draw_level_select()
         for event in pygame.event.get():
@@ -274,7 +291,6 @@ def run(coin):
                     selected_level = 'map3.map'
                     level_select = False
                     music = 3
-
 
     if running and selected_level:
         while running:
@@ -319,9 +335,20 @@ def run(coin):
                 if pygame.sprite.spritecollideany(player, finish_group, pygame.sprite.collide_mask):
                     total_coins += coin_count
                     level_running = False
-                    level_select = True
-                    coin_count = 0
                     pygame.mixer.music.stop()
+
+                    # Отображаем финальный экран
+                    final_screen = True
+                    while final_screen:
+                        menu_rect = draw_final_screen(coin_count)
+                        for event in pygame.event.get():
+                            if event.type == pygame.QUIT:
+                                final_screen = False
+                                running = False
+                            elif event.type == pygame.MOUSEBUTTONDOWN:
+                                if menu_rect.collidepoint(event.pos):
+                                    final_screen = False
+                                    level_select = True
 
                 all_sprites.update()
 
@@ -363,10 +390,11 @@ def run(coin):
                             level_select = False
                             music = 3
 
-
     pygame.mixer.music.stop()
     pygame.quit()
     return total_coins
+
+
 
 
 class UserAuth(QWidget):
