@@ -91,16 +91,27 @@ def run(coin):
     class Treug(pygame.sprite.Sprite):
         def __init__(self, pos_x, pos_y):
             super().__init__(treugs, all_sprites)
-            self.image = load_image('treug.png', color_key=-1)
+            self.list_kub = [load_image(f'treug{i}.png', color_key=-1) for i in range(1, 18)]
+            self.current_kyb = 0
+            self.image = self.list_kub[self.current_kyb]
             self.rect = self.image.get_rect()
             self.rect.x = pos_x * tile_width
             self.rect.y = pos_y * tile_height
             self.mask = pygame.mask.from_surface(self.image)
+            self.speed = 0.04
+            self.kakoykyb = 0
 
         def update(self):
-            self.rect.x -= speed  # я скорость x
+            self.rect.x -= speed # я скорость x
+
             if self.rect.right < 0:
                 self.kill()
+
+            self.kakoykyb += self.speed
+            if self.kakoykyb >= len(self.list_kub):
+                self.kakoykyb = 0
+            self.current_kyb = int(self.kakoykyb)
+            self.image = self.list_kub[self.current_kyb]
 
     class Treug_mal(pygame.sprite.Sprite):
         def __init__(self, pos_x, pos_y):
@@ -188,7 +199,7 @@ def run(coin):
         level1_rect = level1_text.get_rect(center=(w // 2, h // 2 - 50))
         screen.blit(level1_text, level1_rect)
 
-        level2_text = font.render('Уровень 2(в разработке)', True, (255, 255, 255))
+        level2_text = font.render('Уровень 2', True, (255, 255, 255))
         level2_rect = level2_text.get_rect(center=(w // 2, h // 2 + 50))
         screen.blit(level2_text, level2_rect)
 
@@ -354,7 +365,7 @@ def run(coin):
 
                 coin_text = font.render(f'Долларов: {coin_count}', False, (255, 255, 255))
 
-                screen.fill((255, 0, 0))
+                screen.fill((0, 0, 0))
                 all_sprites.draw(screen)
 
                 screen.blit(coin_text, (10, 10))
@@ -393,8 +404,6 @@ def run(coin):
     pygame.mixer.music.stop()
     pygame.quit()
     return total_coins
-
-
 
 
 class UserAuth(QWidget):
@@ -459,7 +468,6 @@ class UserAuth(QWidget):
         user = cursor.fetchone()
         conn.close()
 
-
         if user:
             self.total_coins = user[0]
             QMessageBox.information(self, 'Успех', f'Вы успешно вошли! У вас {self.total_coins} монет.')
@@ -507,7 +515,6 @@ class UserAuth(QWidget):
 
 
 def create_table():
-
     conn = sqlite3.connect('app_database.db')
     cursor = conn.cursor()
     create_table_query = '''
